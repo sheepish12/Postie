@@ -54,4 +54,4 @@ end
 ```
 
 !!! note
-	Postie provides no advantages over RemoteFunctions when requesting data from client to server.
+	Postie provides no advantages over RemoteFunctions when requesting server-side data from the client.
