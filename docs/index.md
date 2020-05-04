@@ -52,6 +52,3 @@ local function getCoins()
 	return Postie.invokeServer("GetCoins", 5)
 end
 ```
-
-!!! note
-	Postie provides no advantages over RemoteFunctions when requesting server-side data from the client.
