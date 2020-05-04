@@ -13,7 +13,7 @@ Invoke player with sent data. Invocation identified by *id*. Yield until *timeou
 !!! warning
 	This function will throw if it is called from the client.
 
-!!! note
+!!! info
 	This function yields.
 
 ### Postie.invokeServer
@@ -30,7 +30,7 @@ Invoke the server with sent data. Invocation identified by *id*. Yield until *ti
 !!! warning
 	This function will throw if it is called from the server.
 
-!!! note
+!!! info
 	This function yields.
 
 ### Postie.setCallback
