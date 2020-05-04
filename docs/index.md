@@ -10,7 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Postie = require(ReplicatedStorage.Postie)
 
 local function getBallsOnScreen(player)
-	local isSuccessful, amountOfBalls = Postie.invokeClient("GetObjectsOnScreen", 5, player, "Balls")
+	local isSuccessful, amountOfBalls = Postie.invokeClient(player, "GetObjectsOnScreen", 5, "Balls")
 	if isSuccessful then -- check for timeout
 		-- a malicious client can always modify the returned data!
 		if typeof(amountOfBalls) == "number" then
