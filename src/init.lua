@@ -1,8 +1,7 @@
 --[[
 	Postie is a module acting as an elegant alternative to RemoteFunctions with a timeout.
-	Public release: https://devforum.roblox.com/t/postie-an-elegant-alternative-to-remotefunctions-with-a-timeout/243812
 	
-	Postie.invokeClient(id: string, player: Instance<Player>, timeout: number, ...sent: any) => isSuccessful: boolean, ...returned: any // yields, server-side
+	Postie.invokeClient(player: Instance<Player>, id: string, timeout: number, ...sent: any) => isSuccessful: boolean, ...returned: any // yields, server-side
 		Invoke player with sent data. Invocation identified by id. Yield until timeout (given in seconds) is reached and return false, or a signal is received back from the client and return true plus the data returned from the client.
 	
 	Postie.invokeServer(id: string, timeout: number, ...sent: any) => isSuccessful: boolean, ...returned: any // yields, client-side
@@ -30,7 +29,7 @@ local listeners = {}
 
 local Postie = {}
 
-function Postie.invokeClient(id, timeout, player, ...)
+function Postie.invokeClient(player, id, timeout, ...)
 	assert(isServer, "Postie.invokeClient can only be called from the server")
 	local bindable = Instance.new("BindableEvent")
 	local isResumed = false
@@ -60,7 +59,7 @@ function Postie.invokeClient(id, timeout, player, ...)
 	sent:FireClient(player, id, uuid, ...)
 	return bindable.Event:Wait()
 end
-Postie.invokeClient = t.wrap(Postie.invokeClient, t.tuple(t.string, t.instanceIsA("Player"), t.number))
+Postie.invokeClient = t.wrap(Postie.invokeClient, t.tuple(t.instanceIsA("Player"), t.string, t.number))
 
 function Postie.invokeServer(id, timeout, ...)
 	assert(not isServer, "Postie.invokeServer can only be called from the client")
