@@ -1,2 +1,2 @@
 # Postie
-An elegant alternative to RemoteFunctions with a timeout
+Postie is a module acting as an elegant alternative to RemoteFunctions with a timeout
