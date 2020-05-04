@@ -1,17 +1,19 @@
-Postie is a module acting as an elegant alternatives to [RemoteFunctions](https://developer.roblox.com/en-us/api-reference/class/RemoteFunction) that offers a *timeout* parameter when invoking another machine. The main benefit of this is the ability to prevent the server infinitely yielding after invoking the client, which is a major negative to RemoteFunctions.
+Postie is a module acting as an elegant alternative to [RemoteFunctions](https://developer.roblox.com/en-us/api-reference/class/RemoteFunction) that offers a *timeout* parameter when invoking another machine. The main benefit of this is the ability to prevent the server infinitely yielding after invoking the client, which is a major negative to RemoteFunctions.
 
-Postie is really just a wrapper for RemoteEvents and does not RemoteFunctions under the hood.
+Postie is really just a wrapper for RemoteEvents and does not use RemoteFunctions under the hood.
 
-## Server to client usage
+### Server to client usage
 
-### Server
+#### Server
 ```
-local Postie = require(path.to.Postie)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Postie = require(ReplicatedStorage.Postie)
 
 local function getBallsOnScreen(player)
 	local isSuccessful, amountOfBalls = Postie.invokeClient("GetObjectsOnScreen", 5, player, "Balls")
 	if isSuccessful then -- check for timeout
-		if typeof(amountOfBalls) == "number" then -- the client can always modify the returned data!
+		-- a malicious client can always modify the returned data!
+		if typeof(amountOfBalls) == "number" then
 			return true, amountOfBalls
 		end
 	end
@@ -19,31 +21,37 @@ local function getBallsOnScreen(player)
 end
 ```
 
-### Client
+#### Client
 ```
-local Postie = require(path.to.Postie)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Postie = require(ReplicatedStorage.Postie)
 
 Postie.setCallback("GetObjectsOnScreen", function(objectType)
 	return amountOnScreenByObjectType[objectType]
 end)
 ```
 
-## Client to server usage
+### Client to server usage
 
-### Server
+#### Server
 ```
-local Postie = require(path.to.Postie)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Postie = require(ReplicatedStorage.Postie)
 
 Postie.setCallback("GetCoins", function(player)
 	return coinsByPlayer[player]
 end)
 ```
 
-### Client
+#### Client
 ```
-local Postie = require(path.to.Postie)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Postie = require(ReplicatedStorage.Postie)
 
 local function getCoins()
 	return Postie.invokeServer("GetCoins", 5)
 end
 ```
+
+!!! note
+	Postie provides no advantages over RemoteFunctions when requesting data from client to server.
