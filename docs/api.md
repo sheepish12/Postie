@@ -10,11 +10,11 @@ Postie.invokeClient(
 
 Invoke player with sent data. Invocation identified by *id*. Yield until *timeout* (given in seconds) is reached and return false, or a signal is received back from the client and return true plus the data returned from the client.
 
-!!! warning
-	This function will throw if it is called from the client.
-
 !!! info
 	This function yields.
+
+!!! warning
+	This function will throw if it is called from the client.
 
 ### Postie.invokeServer
 ```
@@ -27,11 +27,11 @@ Postie.invokeServer(
 
 Invoke the server with sent data. Invocation identified by *id*. Yield until *timeout* (given in seconds) is reached and return false, or a signal is received back from the server and return true plus the data returned from the server.
 
-!!! warning
-	This function will throw if it is called from the server.
-
 !!! info
 	This function yields.
+
+!!! warning
+	This function will throw if it is called from the server.
 
 ### Postie.setCallback
 ```
