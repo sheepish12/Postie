@@ -5,7 +5,7 @@ Postie is really just a wrapper for RemoteEvents and does not use RemoteFunction
 ### Server to client usage
 
 #### Server
-```
+```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Postie = require(ReplicatedStorage.Postie)
 
@@ -22,7 +22,7 @@ end
 ```
 
 #### Client
-```
+```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Postie = require(ReplicatedStorage.Postie)
 
@@ -34,7 +34,7 @@ end)
 ### Client to server usage
 
 #### Server
-```
+```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Postie = require(ReplicatedStorage.Postie)
 
@@ -44,7 +44,7 @@ end)
 ```
 
 #### Client
-```
+```lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Postie = require(ReplicatedStorage.Postie)
 
