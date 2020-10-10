@@ -33,16 +33,15 @@ function Postie.invokeClient(player, id, timeout, ...)
 	assert(isServer, "Postie.invokeClient can only be called from the server")
 	local bindable = Instance.new("BindableEvent")
 	local isResumed = false
-	local pos = #listeners+1
 	-- get uuid
 	local uuid = HttpService:GenerateGUID(false)
 	-- await signal from client
-	listeners[pos] = function(playerWhoFired, signalUuid, ...)
+	listeners[uuid] = function(playerWhoFired, signalUuid, ...)
 		if not (playerWhoFired == player and signalUuid == uuid) then
 			return false
 		end
 		isResumed = true
-		table.remove(listeners, pos)
+		listeners[uuid] = nil
 		bindable:Fire(true, ...)
 		return true
 	end
@@ -52,7 +51,7 @@ function Postie.invokeClient(player, id, timeout, ...)
 		if isResumed then
 			return
 		end
-		table.remove(listeners, pos)
+		listeners[uuid] = nil
 		bindable:Fire(false)
 	end)
 	-- send signal
@@ -65,16 +64,15 @@ function Postie.invokeServer(id, timeout, ...)
 	assert(not isServer, "Postie.invokeServer can only be called from the client")
 	local bindable = Instance.new("BindableEvent")
 	local isResumed = false
-	local pos = #listeners + 1
 	-- get uuid
 	local uuid = HttpService:GenerateGUID(false)
 	-- await signal from client
-	listeners[pos] = function(signalUuid, ...)
+	listeners[uuid] = function(signalUuid, ...)
 		if signalUuid ~= uuid then
 			return false
 		end
 		isResumed = true
-		table.remove(listeners, pos)
+		listeners[uuid] = nil
 		bindable:Fire(true, ...)
 		return true
 	end
@@ -84,7 +82,7 @@ function Postie.invokeServer(id, timeout, ...)
 		if isResumed then
 			return
 		end
-		table.remove(listeners, pos)
+		listeners[uuid] = nil
 		bindable:Fire(false)
 	end)
 	-- send signal
