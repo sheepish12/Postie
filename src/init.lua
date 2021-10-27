@@ -16,7 +16,6 @@
 
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-local Reliable = require(script.Reliable)
 local t = require(script.t)
 
 local sent = script.Sent -- RemoteEvent
@@ -46,8 +45,7 @@ function Postie.invokeClient(player, id, timeout, ...)
 		return true
 	end
 	-- await timeout
-	Reliable.spawn(function()
-		Reliable.wait(timeout)
+	task.delay(timeout, function()
 		if isResumed then
 			return
 		end
@@ -77,8 +75,7 @@ function Postie.invokeServer(id, timeout, ...)
 		return true
 	end
 	-- await timeout
-	Reliable.spawn(function()
-		Reliable.wait(timeout)
+	task.delay(timeout, function()
 		if isResumed then
 			return
 		end
