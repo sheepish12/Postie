@@ -1,4 +1,4 @@
-# Postie - no longer maintained
-Postie is a module acting as an elegant alternative to RemoteFunctions with a timeout
+# Postie
+Postie is a safe alternative to RemoteFunctions with a time-out.
 
 [Documentation](https://bensbk.github.io/Postie/)
