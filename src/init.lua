@@ -10,28 +10,28 @@
 	Postie.invokeClient( // yields, server-side
 		player: Player,
 		id: string,
-		timeout: number,
+		timeOut: number,
 		...data: any
 	) => didRespond: boolean, ...response: any
 	
 		Invoke player with sent data. Invocation identified by id. Yield until
-		timeout (given in seconds) is reached and return false, or a response is
+		timeOut (given in seconds) is reached and return false, or a response is
 		received back from the client and return true plus the data returned
 		from the client. If the invocation reaches the client, but the client
-		doesn't have a corresponding callback, return before timeout regardless
+		doesn't have a corresponding callback, return before timeOut regardless
 		but return false.
 	
 	Postie.invokeServer( // yields, client-side
 		id: string,
-		timeout: number,
+		timeOut: number,
 		...data: any
 	) => didRespond: boolean, ...response: any
 	
 		Invoke the server with sent data. Invocation identified by id. Yield
-		until timeout (given in seconds) is reached and return false, or a
+		until timeOut (given in seconds) is reached and return false, or a
 		response is received back from the server and return true plus the data
 		returned from the server. If the invocation reaches the server, but the
-		server doesn't have a corresponding callback, return before timeout
+		server doesn't have a corresponding callback, return before timeOut
 		regardless but return false.
 	
 	Postie.setCallback(
@@ -63,7 +63,7 @@ local listenerByUuid = {}
 
 local Postie = {}
 
-function Postie.invokeClient(player: Player, id: string, timeout: number, ...: any): (boolean, ...any)
+function Postie.invokeClient(player: Player, id: string, timeOut: number, ...: any): (boolean, ...any)
 	assert(isServer, "Postie.invokeClient can only be called from the server")
 
 	local thread = coroutine.running()
@@ -85,8 +85,8 @@ function Postie.invokeClient(player: Player, id: string, timeout: number, ...: a
 		end
 	end
 
-	-- We await the timeout.
-	task.delay(timeout, function()
+	-- We await the time-out.
+	task.delay(timeOut, function()
 		if isResumed then
 			return
 		end
@@ -95,12 +95,12 @@ function Postie.invokeClient(player: Player, id: string, timeout: number, ...: a
 	end)
 
 	-- Finally, we send the signal to the client and await either the client's
-	-- response or the timeout.
+	-- response or the time-out.
 	sent:FireClient(player, id, uuid, ...)
 	return coroutine.yield()
 end
 
-function Postie.invokeServer(id: string, timeout: number, ...: any): (boolean, ...any)
+function Postie.invokeServer(id: string, timeOut: number, ...: any): (boolean, ...any)
 	assert(not isServer, "Postie.invokeServer can only be called from the client")
 
 	local thread = coroutine.running()
@@ -118,8 +118,8 @@ function Postie.invokeServer(id: string, timeout: number, ...: any): (boolean, .
 		end
 	end
 
-	-- We await the timeout.
-	task.delay(timeout, function()
+	-- We await the time-out.
+	task.delay(timeOut, function()
 		if isResumed then
 			return
 		end
@@ -128,7 +128,7 @@ function Postie.invokeServer(id: string, timeout: number, ...: any): (boolean, .
 	end)
 
 	-- Finally, we send the signal to the client and await either the client's
-	-- response or the timeout.
+	-- response or the time-out.
 	sent:FireServer(id, uuid, ...)
 	return coroutine.yield()
 end
