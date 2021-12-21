@@ -1,135 +1,182 @@
 --[[
-	Postie is a module acting as an elegant alternative to RemoteFunctions with a timeout.
+	Postie 1.1.0 by BenSBk
+	Depends on:
+	- The Roblox API
+	- A RemoteEvent named Sent
+	- A RemoteEvent named Received
 	
-	Postie.invokeClient(player: Instance<Player>, id: string, timeout: number, ...sent: any) => isSuccessful: boolean, ...returned: any // yields, server-side
-		Invoke player with sent data. Invocation identified by id. Yield until timeout (given in seconds) is reached and return false, or a signal is received back from the client and return true plus the data returned from the client.
+	Postie is a safe alternative to RemoteFunctions with a time-out.
 	
-	Postie.invokeServer(id: string, timeout: number, ...sent: any) => isSuccessful: boolean, ...returned: any // yields, client-side
-		Invoke the server with sent data. Invocation identified by id. Yield until timeout (given in seconds) is reached and return false, or a signal is received back from the server and return trure plus the data returned from the server.
+	Postie.invokeClient( // yields, server-side
+		player: Player,
+		id: string,
+		timeout: number,
+		...data: any
+	) => didRespond: boolean, ...response: any
 	
-	Postie.setCallback(id: string, callback?: (...) -> ...returned: any)
-		Set the callback that is invoked when an invocation identified by id is sent. Data sent with the invocation are passed to the callback. If on the server, the player who invoked is implicitly received as the first argument.
+		Invoke player with sent data. Invocation identified by id. Yield until
+		timeout (given in seconds) is reached and return false, or a response is
+		received back from the client and return true plus the data returned
+		from the client. If the invocation reaches the client, but the client
+		doesn't have a corresponding callback, return before timeout regardless
+		but return false.
 	
-	Postie.getCallback(id: string) => callback?: (...)
+	Postie.invokeServer( // yields, client-side
+		id: string,
+		timeout: number,
+		...data: any
+	) => didRespond: boolean, ...response: any
+	
+		Invoke the server with sent data. Invocation identified by id. Yield
+		until timeout (given in seconds) is reached and return false, or a
+		response is received back from the server and return true plus the data
+		returned from the server. If the invocation reaches the server, but the
+		server doesn't have a corresponding callback, return before timeout
+		regardless but return false.
+	
+	Postie.setCallback(
+		id: string,
+		callback?: (...data: any) -> ...response: any
+	)
+	
+		Set the callback that is invoked when an invocation identified by id is
+		sent. Data sent with the invocation are passed to the callback. If on
+		the server, the player who invoked is implicitly received as the first
+		argument.
+	
+	Postie.getCallback(
+		id: string
+	) => callback?: (...data: any) -> ...response: any
+	
 		Return the callback corresponding with id.
---]]
+]]
 
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-local t = require(script.t)
 
 local sent = script.Sent -- RemoteEvent
 local received = script.Received -- RemoteEvent
 
 local isServer = RunService:IsServer()
 local callbackById = {}
-local listeners = {}
-
+local listenerByUuid = {}
 
 local Postie = {}
 
-function Postie.invokeClient(player, id, timeout, ...)
+function Postie.invokeClient(player: Player, id: string, timeout: number, ...: any): (boolean, ...any)
 	assert(isServer, "Postie.invokeClient can only be called from the server")
-	local bindable = Instance.new("BindableEvent")
+
+	local thread = coroutine.running()
 	local isResumed = false
-	-- get uuid
 	local uuid = HttpService:GenerateGUID(false)
-	-- await signal from client
-	listeners[uuid] = function(playerWhoFired, signalUuid, ...)
-		if not (playerWhoFired == player and signalUuid == uuid) then
-			return false
+
+	-- We await a signal from the client.
+	listenerByUuid[uuid] = function(playerWhoFired, didInvokeCallback, ...)
+		if playerWhoFired ~= player then
+			-- The client lied about the UUID.
+			return
 		end
 		isResumed = true
-		listeners[uuid] = nil
-		bindable:Fire(true, ...)
-		return true
+		listenerByUuid[uuid] = nil
+		if didInvokeCallback then
+			task.spawn(thread, true, ...)
+		else
+			task.spawn(thread, false)
+		end
 	end
-	-- await timeout
+
+	-- We await the timeout.
 	task.delay(timeout, function()
 		if isResumed then
 			return
 		end
-		listeners[uuid] = nil
-		bindable:Fire(false)
+		listenerByUuid[uuid] = nil
+		task.spawn(thread, false)
 	end)
-	-- send signal
+
+	-- Finally, we send the signal to the client and await either the client's
+	-- response or the timeout.
 	sent:FireClient(player, id, uuid, ...)
-	return bindable.Event:Wait()
+	return coroutine.yield()
 end
-Postie.invokeClient = t.wrap(Postie.invokeClient, t.tuple(t.instanceIsA("Player"), t.string, t.number))
 
-function Postie.invokeServer(id, timeout, ...)
+function Postie.invokeServer(id: string, timeout: number, ...: any): (boolean, ...any)
 	assert(not isServer, "Postie.invokeServer can only be called from the client")
-	local bindable = Instance.new("BindableEvent")
+
+	local thread = coroutine.running()
 	local isResumed = false
-	-- get uuid
 	local uuid = HttpService:GenerateGUID(false)
-	-- await signal from client
-	listeners[uuid] = function(signalUuid, ...)
-		if signalUuid ~= uuid then
-			return false
-		end
+
+	-- We await a signal from the client.
+	listenerByUuid[uuid] = function(didInvokeCallback, ...)
 		isResumed = true
-		listeners[uuid] = nil
-		bindable:Fire(true, ...)
-		return true
+		listenerByUuid[uuid] = nil
+		if didInvokeCallback then
+			task.spawn(thread, true, ...)
+		else
+			task.spawn(thread, false)
+		end
 	end
-	-- await timeout
+
+	-- We await the timeout.
 	task.delay(timeout, function()
 		if isResumed then
 			return
 		end
-		listeners[uuid] = nil
-		bindable:Fire(false)
+		listenerByUuid[uuid] = nil
+		task.spawn(thread, false)
 	end)
-	-- send signal
-	sent:FireServer(id, uuid, ...)
-	return bindable.Event:Wait()
-end
-Postie.invokeServer = t.wrap(Postie.invokeServer, t.tuple(t.string, t.number))
 
-function Postie.setCallback(id, callback)
+	-- Finally, we send the signal to the client and await either the client's
+	-- response or the timeout.
+	sent:FireServer(id, uuid, ...)
+	return coroutine.yield()
+end
+
+function Postie.setCallback(id: string, callback: ((...any) -> ...any)?)
 	callbackById[id] = callback
 end
-Postie.setCallback = t.wrap(Postie.setCallback, t.tuple(t.string, t.optional(t.callback)))
 
-function Postie.getCallback(id)
+function Postie.getCallback(id: string): ((...any) -> ...any)?
 	return callbackById[id]
 end
-Postie.getCallback = t.wrap(Postie.getCallback, t.string)
 
-
--- handle signals
 if isServer then
-	-- handle received
-	received.OnServerEvent:Connect(function(...)
-		for _, listener in pairs(listeners) do
-			if listener(...) then return end
+	-- We handle responses received from the client.
+	received.OnServerEvent:Connect(function(player, uuid, didInvokeCallback, ...)
+		local listener = listenerByUuid[uuid]
+		if not listener then
+			return
 		end
+		listener(player, didInvokeCallback, ...)
 	end)
-	-- handle sent
+
+	-- We handle requests sent by the client.
 	sent.OnServerEvent:Connect(function(player, id, uuid, ...)
 		local callback = callbackById[id]
-		if callback == nil then
-			received:FireClient(player, uuid)
+		if callback then
+			received:FireClient(player, uuid, true, callback(player, ...))
 		else
-			received:FireClient(player, uuid, callback(player, ...))
+			received:FireClient(player, uuid, false)
 		end
 	end)
 else
-	-- handle received
-	received.OnClientEvent:Connect(function(...)
-		for _, listener in pairs(listeners) do
-			if listener(...) then return end
+	-- We handle responses received from the server.
+	received.OnClientEvent:Connect(function(uuid, didInvokeCallback, ...)
+		local listener = listenerByUuid[uuid]
+		if not listener then
+			return
 		end
+		listener(didInvokeCallback, ...)
 	end)
-	-- handle sent
+
+	-- We handle requests sent by the server.
 	sent.OnClientEvent:Connect(function(id, uuid, ...)
 		local callback = callbackById[id]
-		if callback == nil then
-			received:FireServer(uuid)
+		if callback then
+			received:FireServer(uuid, true, callback(...))
 		else
-			received:FireServer(uuid, callback(...))
+			received:FireServer(uuid, false)
 		end
 	end)
 end
