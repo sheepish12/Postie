@@ -1,6 +1,10 @@
-Postie is a module that provides a safe alternative to [RemoteFunctions](https://developer.roblox.com/en-us/api-reference/class/RemoteFunction), offering a time-out parameter when invoking another machine. The main benefit of this is the ability to prevent the server infinitely yielding after invoking the client, which is a major negative to RemoteFunctions.
+Postie is a module that provides a safe alternative to [RemoteFunctions](https://developer.roblox.com/en-us/api-reference/class/RemoteFunction), offering a time-out parameter when invoking another machine. The main benefit of this is that you avoid the issues that come with invoking the client with a RemoteFunction:
 
-Postie is really just a wrapper for RemoteEvents and does not use RemoteFunctions under the hood.
+* If the client throws an error, the server will throw the error too.
+* If the client disconnects while it's being invoked, the InvokeClient call will error.
+* If the client never returns a value, the server will hang forever.
+
+Postie solves all three of these problems by replacing one RemoteFunction invocation with two RemoteEvent firings.
 
 ### Server to client usage
 
