@@ -45,7 +45,7 @@ Set the callback that is invoked when an invocation identified by *id* is sent. 
 ### Postie.getCallback
 ```
 Postie.getCallback(
-		id: string
+	id: string
 ) => callback?: (...data: any) -> ...response: any
 ```
 
